@@ -110,10 +110,39 @@ export async function batchPlaceFootprint(): Promise<void> {
 	
 }
 
-// 解析CSV文件内容（支持名称,坐标格式，兼容表头）
-function parseCSVWithCoordinates(csvContent: string): Array<{name: string, x: number, y: number}> {
+// 单位转换函数
+function convertToMil(value: number, unit: string): number {
+    switch (unit.toLowerCase()) {
+        case 'mm':
+            return value * 39.3701; // 1mm = 39.3701mil
+        case 'mil':
+            return value;
+        case 'inch':
+            return value * 1000; // 1inch = 1000mil
+        default:
+            return value; // 默认假设为mil
+    }
+}
+
+function convertToInch(value: number, unit: string): number {
+    switch (unit.toLowerCase()) {
+        case 'mm':
+            return value * 0.0393701; // 1mm = 0.0393701inch
+        case 'mil':
+            return value * 0.001; // 1mil = 0.001inch
+        case 'inch':
+            return value;
+        default:
+            return value; // 默认假设为inch
+    }
+}
+
+// 解析CSV文件内容（支持名称,坐标格式，兼容表头和单位转换）
+function parseCSVWithCoordinates(csvContent: string, targetUnit: 'mil' | 'inch' = 'mil'): Array<{name: string, x: number, y: number}> {
     const lines = csvContent.trim().split('\n');
-    const footprints = [];
+    const components = [];
+    let xUnit = '';
+    let yUnit = '';
     
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
@@ -121,35 +150,59 @@ function parseCSVWithCoordinates(csvContent: string): Array<{name: string, x: nu
         
         const columns = line.split(',').map(col => col.trim().replace(/"/g, ''));
         
-        // 跳过表头行（检查第一行是否包含常见的表头关键词）
+        // 检查是否为表头行并提取单位信息
         if (i === 0) {
             const firstColumn = columns[0].toLowerCase();
             if (firstColumn.includes('name') || firstColumn.includes('名称') || 
                 firstColumn.includes('封装') || firstColumn.includes('component')) {
+                // 从表头提取单位信息
+                if (columns.length >= 3) {
+                    // 提取X坐标单位
+                    const xHeader = columns[1].toLowerCase();
+                    if (xHeader.includes('mm')) xUnit = 'mm';
+                    else if (xHeader.includes('mil')) xUnit = 'mil';
+                    else if (xHeader.includes('inch')) xUnit = 'inch';
+                    
+                    // 提取Y坐标单位
+                    const yHeader = columns[2].toLowerCase();
+                    if (yHeader.includes('mm')) yUnit = 'mm';
+                    else if (yHeader.includes('mil')) yUnit = 'mil';
+                    else if (yHeader.includes('inch')) yUnit = 'inch';
+                }
                 continue; // 跳过表头行
             }
         }
         
-        // 支持格式：封装名称,X坐标,Y坐标
+        // 支持格式：元件名称,X坐标,Y坐标
         if (columns.length >= 3) {
             const name = columns[0];
             const x = parseFloat(columns[1]);
             const y = parseFloat(columns[2]);
             
             if (!isNaN(x) && !isNaN(y)) {
-                footprints.push({ name, x, y });
+                // 根据目标单位进行转换
+                let convertedX, convertedY;
+                if (targetUnit === 'mil') {
+                    convertedX = convertToMil(x, xUnit);
+                    convertedY = convertToMil(y, yUnit);
+                } else {
+                    convertedX = convertToInch(x, xUnit);
+                    convertedY = convertToInch(y, yUnit);
+                }
+                
+                components.push({ name, x: convertedX, y: convertedY });
             }
         }
     }
     
-    return footprints;
+    return components;
 }
 
 
 
 // 根据CSV内容直接放置封装
 async function placeFootprintsFromCSV(csvContent: string): Promise<void> {
-    const footprints = parseCSVWithCoordinates(csvContent);
+    const footprints = parseCSVWithCoordinates(csvContent, 'mil'); // PCB使用mil作为内部单位
     
     if (footprints.length === 0) {
         eda.sys_Dialog.showInformationMessage('CSV文件中没有找到有效的封装数据');
@@ -259,7 +312,7 @@ async function placeFootprintsFromCSV(csvContent: string): Promise<void> {
 
 // 根据CSV内容直接放置符号
 async function placeSymbolsFromCSV(csvContent: string): Promise<void> {
-    const symbols = parseCSVWithCoordinates(csvContent);
+    const symbols = parseCSVWithCoordinates(csvContent, 'inch'); // 原理图使用inch作为内部单位
     
     if (symbols.length === 0) {
         eda.sys_Dialog.showInformationMessage('CSV文件中没有找到有效的符号数据');
@@ -368,6 +421,6 @@ async function placeSymbolsFromCSV(csvContent: string): Promise<void> {
 
 export function about(): void {
 	eda.sys_Dialog.showInformationMessage(
-		"批量放置元件 v1.0.1\n\n支持CSV文件导入的批量放置元件工具。\n\n功能：\n- 批量放置PCB封装\n- 批量放置原理图符号",
+		"批量放置元件 v1.1.0\n\n支持CSV文件导入的批量放置元件工具，具备智能单位转换功能。\n\n功能：\n- 批量放置PCB封装（支持mm/mil单位自动转换）\n- 批量放置原理图符号（支持inch/mm单位自动转换）\n- 智能识别CSV表头中的单位信息\n- 自动进行单位转换以匹配EDA内部坐标系统\n\nCSV格式示例：\nName,X(mm),Y(mm)\n元件名称,坐标值,坐标值",
 	);
 }
