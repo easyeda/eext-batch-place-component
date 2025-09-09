@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设置</title>
+    <style>
+        * {
+            margin: 2px;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: white;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .popup {
+            background: white;
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content {
+            padding: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 8px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #262626;
+            font-weight: 400;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 32px;
+            padding: 4px 15px !important;
+            margin: 2px 0;
+            border: 1px solid #d9d9d9;
+            border-radius: 0;
+            font-size: 14px;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+
+        .form-input:hover {
+            border-color: #40a9ff;
+        }
+
+        .popup-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 16px;
+            padding-top: 12px;
+        }
+
+        .btn {
+            padding: 6px 20px;
+            border-radius: 0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            outline: none;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .btn-primary:hover {
+            background-color: #40a9ff;
+            border-color: #40a9ff;
+        }
+
+        .btn-primary:active {
+            background-color: #096dd9;
+            border-color: #096dd9;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: #d32f2f;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .success-message {
+            color: #2e7d32;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="popup">
+        <div class="popup-content">
+            <form id="libraryForm">
+                <div class="form-group">
+                    <label class="form-label" for="libraryType">元件来源：</label>
+                    <select id="libraryType" name="libraryType" class="form-input" onchange="onLibraryTypeChange()">
+                        <option value="personal">个人库</option>
+                        <option value="project">工程库</option>
+                        <option value="system">系统库</option>
+                        <option value="other">其他库</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="specificLibraryGroup" style="display: none;">
+                    <label class="form-label" for="specificLibrary">选择具体库</label>
+                    <select id="specificLibrary" name="specificLibrary" class="form-input">
+                        <option value="">请选择库...</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        
+        <div class="popup-footer" style="padding: 0 15px 15px 15px;">
+            <button type="button" class="btn btn-primary" onclick="saveLibrarySelection()">保存</button>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+    </div>
+
+    <script>
+        let isProcessing = false;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLibrarySelection();
+        });
+
+        // 库类型改变事件
+        async function onLibraryTypeChange() {
+            const libraryType = document.getElementById('libraryType').value;
+            const specificLibraryGroup = document.getElementById('specificLibraryGroup');
+            const specificLibrarySelect = document.getElementById('specificLibrary');
+            
+            if (libraryType === 'other') {
+                // 显示具体库选择框
+                specificLibraryGroup.style.display = 'block';
+                
+                // 清空现有选项
+                specificLibrarySelect.innerHTML = '<option value="">请选择库...</option>';
+                
+                try {
+                    // 获取所有库列表
+                    const allLibraries = await eda.lib_LibrariesList.getAllLibrariesList();
+                    console.log('所有库列表:', allLibraries);
+                    
+                    // 添加到下拉框
+                    allLibraries.forEach(library => {
+                        const option = document.createElement('option');
+                        option.value = library.uuid;
+                        option.textContent = library.name;
+                        specificLibrarySelect.appendChild(option);
+                    });
+                    
+                    // 加载已保存的具体库选择
+                    const savedSpecificLibraryUuid = await eda.sys_Storage.getExtensionUserConfig('selectedSpecificLibraryUuid');
+                    if (savedSpecificLibraryUuid) {
+                        specificLibrarySelect.value = savedSpecificLibraryUuid;
+                    }
+                    
+                } catch (error) {
+                    console.error('获取库列表失败:', error);
+                    showError('获取库列表失败: ' + error.message);
+                }
+            } else {
+                // 隐藏具体库选择框
+                specificLibraryGroup.style.display = 'none';
+            }
+        }
+
+        // 加载已保存的库选择
+        async function loadLibrarySelection() {
+            try {
+                const savedLibraryType = await eda.sys_Storage.getExtensionUserConfig('selectedLibraryType');
+                if (savedLibraryType) {
+                    document.getElementById('libraryType').value = savedLibraryType;
+                    
+                    // 如果保存的是其他库，触发类型改变事件来显示具体库选择框
+                    if (savedLibraryType === 'other') {
+                        await onLibraryTypeChange();
+                    }
+                }
+            } catch (error) {
+                console.error('加载库选择失败:', error);
+            }
+        }
+
+        // 保存库选择
+        async function saveLibrarySelection() {
+            if (isProcessing) return;
+            
+            isProcessing = true;
+            const libraryType = document.getElementById('libraryType').value;
+            
+            try {
+                // 根据选择的库类型获取对应的UUID
+                let libraryUuid = '';
+                
+                switch (libraryType) {
+                    case 'personal':
+                        libraryUuid = await eda.lib_LibrariesList.getPersonalLibraryUuid();
+                        break;
+                    case 'project':
+                        libraryUuid = await eda.lib_LibrariesList.getProjectLibraryUuid();
+                        break;
+                    case 'system':
+                        libraryUuid = await eda.lib_LibrariesList.getSystemLibraryUuid();
+                        break;
+                    case 'other':
+                        // 对于其他库，使用用户选择的具体库
+                        const specificLibraryUuid = document.getElementById('specificLibrary').value;
+                        if (!specificLibraryUuid) {
+                            showError('请选择具体的库');
+                            isProcessing = false;
+                            return;
+                        }
+                        libraryUuid = specificLibraryUuid;
+                        // 保存具体库选择
+                        await eda.sys_Storage.setExtensionUserConfig('selectedSpecificLibraryUuid', specificLibraryUuid);
+                        break;
+                }
+                
+                // 保存库类型和UUID到Storage
+                await eda.sys_Storage.setExtensionUserConfig('selectedLibraryType', libraryType);
+                await eda.sys_Storage.setExtensionUserConfig('selectedLibraryUuid', libraryUuid);
+                
+                // 显示成功消息
+                showSuccess('库选择已保存！');
+                console.log('已保存库UUID:', libraryUuid);
+                
+            } catch (error) {
+                console.error('保存库选择失败:', error);
+                showError('保存失败: ' + error.message);
+            } finally {
+                isProcessing = false;
+            }
+        }
+
+        // 显示错误消息
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            
+            // 3秒后隐藏错误消息
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 3000);
+        }
+
+        // 显示成功消息
+        function showSuccess(message) {
+            const successElement = document.getElementById('successMessage');
+            successElement.textContent = message;
+            successElement.style.display = 'block';
+            
+            // 3秒后隐藏成功消息
+            setTimeout(() => {
+                successElement.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

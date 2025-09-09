@@ -1,0 +1,79 @@
+{
+	"name": "batch-place-component",
+	"uuid": "9d8cd2e6608a453eb2054f5466fbbbcb",
+	"displayName": "批量放置元件",
+	"description": "批量放置PCB封装的扩展工具，支持CSV文件导入和自定义间距配置",
+	"version": "1.0.2",
+	"publisher": "JLCEDA <support@lceda.cn>",
+	"engines": {
+		"eda": "^2.3.0"
+	},
+	"license": "Apache-2.0",
+	"repository": {
+		"type": "extension-store",
+		"url": ""
+	},
+	"categories": "PCB",
+	"keywords": [
+		"PCB",
+		"封装",
+		"批量放置",
+		"自动化"
+	],
+	"images": {
+		"logo": "./images/logo.png"
+	},
+	"homepage": "https://pro.lceda.cn",
+	"bugs": "https://lceda.cn/page/feedback?originPage=other",
+	"activationEvents": {},
+	"entry": "./dist/index",
+	"dependentExtensions": {},
+	"headerMenus": {
+				"sch": [
+			{
+				"id": "BatchPlace",
+				"title": "放置元件",
+				"menuItems": [
+					{
+						"id": "BatchPlaceFootprint",
+						"title": "批量放置",
+						"registerFn": "batchPlaceSymbol"
+					},
+					{
+						"id": "LibrarySelector",
+						"title": "设置",
+						"registerFn": "openLibrarySelector"
+					},
+					{
+						"id": "About",
+						"title": "关于...",
+						"registerFn": "about"
+					}
+				]
+			}
+		],
+		"pcb": [
+			{
+				"id": "BatchPlace",
+				"title": "放置元件",
+				"menuItems": [
+					{
+						"id": "BatchPlaceFootprint",
+						"title": "批量放置",
+						"registerFn": "batchPlaceFootprint"
+					},
+					{
+						"id": "LibrarySelector",
+						"title": "设置",
+						"registerFn": "openLibrarySelector"
+					},
+					{
+						"id": "About",
+						"title": "关于...",
+						"registerFn": "about"
+					}
+				]
+			}
+		]
+	}
+}
