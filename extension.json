@@ -3,15 +3,15 @@
 	"uuid": "9d8cd2e6608a453eb2054f5466fbbbcb",
 	"displayName": "批量放置元件",
 	"description": "批量放置PCB封装和原理图符号的扩展工具，支持CSV文件导入和智能单位转换",
-	"version": "1.0.3",
+	"version": "1.10.1",
 	"publisher": "JLCEDA <support@lceda.cn>",
 	"engines": {
 		"eda": "^2.3.0"
 	},
 	"license": "Apache-2.0",
 	"repository": {
-		"type": "extension-store",
-		"url": ""
+		"type": "github",
+		"url": "https://github.com/easyeda/eext-batch-place-component"
 	},
 	"categories": "PCB",
 	"keywords": [
@@ -25,8 +25,8 @@
 	"images": {
 		"logo": "./images/logo.png"
 	},
-	"homepage": "https://pro.lceda.cn",
-	"bugs": "https://lceda.cn/page/feedback?originPage=other",
+	"homepage": "https://github.com/easyeda/eext-batch-place-component",
+	"bugs": "https://github.com/easyeda/eext-batch-place-component/issues",
 	"activationEvents": {},
 	"entry": "./dist/index",
 	"dependentExtensions": {},
