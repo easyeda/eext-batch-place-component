@@ -23,7 +23,7 @@
 		"自动化"
 	],
 	"images": {
-		"logo": "./images/logo.png"
+		"logo": "./images/logo.jpg"
 	},
 	"homepage": "https://github.com/easyeda/eext-batch-place-component",
 	"bugs": "https://github.com/easyeda/eext-batch-place-component/issues",
