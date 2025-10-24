@@ -2,11 +2,11 @@
 	"name": "batch-place-component",
 	"uuid": "9d8cd2e6608a453eb2054f5466fbbbcb",
 	"displayName": "批量放置元件",
-	"description": "批量放置PCB封装和原理图符号的扩展工具，支持CSV文件导入和智能单位转换",
+	"description": "支持导入CSV文件进行批量放置元件在原理图或PCB的小工具",
 	"version": "1.10.1",
-	"publisher": "JLCEDA <support@lceda.cn>",
+	"publisher": "JLCEDA",
 	"engines": {
-		"eda": "^2.3.0"
+		"eda": "^2.2.40"
 	},
 	"license": "Apache-2.0",
 	"repository": {
@@ -16,8 +16,7 @@
 	"categories": "PCB",
 	"keywords": [
 		"PCB",
-		"封装",
-		"符号",
+		"原理图",
 		"批量放置",
 		"单位转换",
 		"自动化"
@@ -38,12 +37,12 @@
 				"menuItems": [
 					{
 						"id": "BatchPlaceSymbol",
-						"title": "批量放置",
+						"title": "批量放置元件...",
 						"registerFn": "batchPlaceSymbol"
 					},
 					{
 						"id": "LibrarySelector",
-						"title": "设置",
+						"title": "设置...",
 						"registerFn": "openLibrarySelector"
 					},
 					{
@@ -61,12 +60,12 @@
 				"menuItems": [
 					{
 						"id": "BatchPlaceFootprint",
-						"title": "批量放置",
+						"title": "批量放置元件...",
 						"registerFn": "batchPlaceFootprint"
 					},
 					{
 						"id": "LibrarySelector",
-						"title": "设置",
+						"title": "设置...",
 						"registerFn": "openLibrarySelector"
 					},
 					{
